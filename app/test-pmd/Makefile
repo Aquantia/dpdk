@@ -72,6 +72,8 @@ endif
 
 endif
 
+LDLIBS += -lrte_pmd_atlantic
+
 include $(RTE_SDK)/mk/rte.app.mk
 
 endif

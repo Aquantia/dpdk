@@ -31,5 +31,9 @@ SRCS-$(CONFIG_RTE_LIBRTE_ATLANTIC_PMD) += hw_atl_utils.c
 SRCS-$(CONFIG_RTE_LIBRTE_ATLANTIC_PMD) += hw_atl_llh.c
 SRCS-$(CONFIG_RTE_LIBRTE_ATLANTIC_PMD) += hw_atl_utils_fw2x.c
 SRCS-$(CONFIG_RTE_LIBRTE_ATLANTIC_PMD) += hw_atl_b0.c
+SRCS-$(CONFIG_RTE_LIBRTE_ATLANTIC_PMD) += rte_pmd_atlantic.c
+
+# install this header file
+SYMLINK-$(CONFIG_RTE_LIBRTE_ATLANTIC_PMD)-include := rte_pmd_atlantic.h
 
 include $(RTE_SDK)/mk/rte.lib.mk

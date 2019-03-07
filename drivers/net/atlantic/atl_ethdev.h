@@ -34,7 +34,7 @@
 	(&((struct atl_adapter *)adapter)->hw_cfg)
 
 #define ATL_FLAG_NEED_LINK_UPDATE (uint32_t)(1 << 0)
-#define ATL_FLAG_NEED_LINK_CONFIG (uint32_t)(4 << 0)
+#define ATL_FLAG_MACSEC (uint32_t)(4 << 0)
 
 struct atl_interrupt {
 	uint32_t flags;
@@ -103,5 +103,18 @@ uint16_t atl_xmit_pkts(void *tx_queue, struct rte_mbuf **tx_pkts,
 
 uint16_t atl_prep_pkts(void *tx_queue, struct rte_mbuf **tx_pkts,
 		uint16_t nb_pkts);
+
+int
+atl_dev_led_control(struct rte_eth_dev *dev, int control);
+
+int
+atl_dev_read_eeprom(struct rte_eth_dev *dev,
+			struct rte_dev_eeprom_info *eeprom,
+			int dev_addr);
+
+int
+atl_dev_write_eeprom(struct rte_eth_dev *dev,
+			struct rte_dev_eeprom_info *eeprom,
+			int dev_addr);
 
 #endif /* _ATLANTIC_ETHDEV_H_ */

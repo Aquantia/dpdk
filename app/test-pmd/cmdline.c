@@ -66,6 +66,11 @@
 #ifdef RTE_LIBRTE_IXGBE_PMD
 #include <rte_pmd_ixgbe.h>
 #endif
+
+#ifdef RTE_LIBRTE_ATLANTIC_PMD
+#include <rte_pmd_atlantic.h>
+#endif
+
 #ifdef RTE_LIBRTE_I40E_PMD
 #include <rte_pmd_i40e.h>
 #endif
@@ -13899,9 +13904,7 @@ cmd_set_macsec_offload_on_parsed(
 
 	rte_eth_dev_info_get(port_id, &dev_info);
 	if (dev_info.tx_offload_capa & DEV_TX_OFFLOAD_MACSEC_INSERT) {
-#ifdef RTE_LIBRTE_IXGBE_PMD
-		ret = rte_pmd_ixgbe_macsec_enable(port_id, en, rp);
-#endif
+		ret = rte_pmd_atl_macsec_enable(port_id, en, rp);
 	}
 	RTE_SET_USED(en);
 	RTE_SET_USED(rp);
@@ -13993,9 +13996,8 @@ cmd_set_macsec_offload_off_parsed(
 
 	rte_eth_dev_info_get(port_id, &dev_info);
 	if (dev_info.tx_offload_capa & DEV_TX_OFFLOAD_MACSEC_INSERT) {
-#ifdef RTE_LIBRTE_IXGBE_PMD
-		ret = rte_pmd_ixgbe_macsec_disable(port_id);
-#endif
+
+                ret = rte_pmd_atl_macsec_disable(port_id);
 	}
 	switch (ret) {
 	case 0:
@@ -14079,13 +14081,11 @@ cmd_set_macsec_sc_parsed(
 	int ret = -ENOTSUP;
 	int is_tx = (strcmp(res->tx_rx, "tx") == 0) ? 1 : 0;
 
-#ifdef RTE_LIBRTE_IXGBE_PMD
 	ret = is_tx ?
-		rte_pmd_ixgbe_macsec_config_txsc(res->port_id,
+		rte_pmd_atl_macsec_config_txsc(res->port_id,
 				res->mac.addr_bytes) :
-		rte_pmd_ixgbe_macsec_config_rxsc(res->port_id,
+		rte_pmd_atl_macsec_config_rxsc(res->port_id,
 				res->mac.addr_bytes, res->pi);
-#endif
 	RTE_SET_USED(is_tx);
 
 	switch (ret) {
@@ -14198,13 +14198,11 @@ cmd_set_macsec_sa_parsed(
 		key[i] = (uint8_t) ((xdgt0 * 16) + xdgt1);
 	}
 
-#ifdef RTE_LIBRTE_IXGBE_PMD
 	ret = is_tx ?
-		rte_pmd_ixgbe_macsec_select_txsa(res->port_id,
+		rte_pmd_atl_macsec_select_txsa(res->port_id,
 			res->idx, res->an, res->pn, key) :
-		rte_pmd_ixgbe_macsec_select_rxsa(res->port_id,
+		rte_pmd_atl_macsec_select_rxsa(res->port_id,
 			res->idx, res->an, res->pn, key);
-#endif
 	RTE_SET_USED(is_tx);
 	RTE_SET_USED(key);
 
