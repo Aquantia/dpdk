@@ -1059,6 +1059,7 @@ atl_dev_xstats_get(struct rte_eth_dev *dev, struct rte_eth_xstat *stats,
 {
 	struct atl_adapter *adapter = dev->data->dev_private;
 	struct aq_hw_s *hw = &adapter->hw;
+	struct aq_hw_cfg_s *cfg = &adapter->hw_cfg;
 	struct get_stats req = { 0 };
 	struct macsec_msg_fw_request msg = { 0 };
 	struct macsec_msg_fw_response resp = { 0 };
@@ -1071,7 +1072,8 @@ atl_dev_xstats_get(struct rte_eth_dev *dev, struct rte_eth_xstat *stats,
 		return count;
 
 	if (n > RTE_DIM(atl_xstats_generic_tbl) &&
-		hw->aq_fw_ops->send_macsec_req != NULL) {
+	    cfg->aq_macsec.common.macsec_enabled &&
+	    hw->aq_fw_ops->send_macsec_req != NULL) {
 		req.ingress_sa_index = 0xff;
 		req.egress_sc_index = 0xff;
 		req.egress_sa_index = 0xff;
