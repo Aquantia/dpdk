@@ -659,8 +659,6 @@ atl_dev_stop(struct rte_eth_dev *dev)
 	/* disable interrupts */
 	atl_disable_intr(hw);
 
-	/* reset the NIC */
-	atl_reset_hw(hw);
 	hw->adapter_stopped = 1;
 
 	atl_stop_queues(dev);
