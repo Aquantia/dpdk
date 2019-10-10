@@ -931,7 +931,7 @@ atl_recv_pkts(void *rx_queue, struct rte_mbuf **rx_pkts, uint16_t nb_pkts)
 	uint16_t nb_rx = 0;
 	uint16_t nb_hold = 0;
 	struct hw_atl_rxd_wb_s rxd_wb;
-	struct hw_atl_rxd_s *rxd = NULL;
+	volatile struct hw_atl_rxd_s *rxd = NULL;
 	uint16_t tail = rxq->rx_tail;
 	uint64_t dma_addr;
 	uint16_t pkt_len = 0;
@@ -939,8 +939,8 @@ atl_recv_pkts(void *rx_queue, struct rte_mbuf **rx_pkts, uint16_t nb_pkts)
 	while (nb_rx < nb_pkts) {
 		uint16_t eop_tail = tail;
 
-		rxd = (struct hw_atl_rxd_s *)&rxq->hw_ring[tail];
-		rxd_wb = *(struct hw_atl_rxd_wb_s *)rxd;
+		rxd = (volatile struct hw_atl_rxd_s *)&rxq->hw_ring[tail];
+		rxd_wb = *(volatile struct hw_atl_rxd_wb_s *)rxd;
 
 		if (!rxd_wb.dd) { /* RxD is not done */
 			break;
@@ -1071,8 +1071,8 @@ atl_recv_pkts(void *rx_queue, struct rte_mbuf **rx_pkts, uint16_t nb_pkts)
 			/* filled mbuf_first */
 			if (rxd_wb.eop)
 				break;
-			rxd = (struct hw_atl_rxd_s *)&rxq->hw_ring[tail];
-			rxd_wb = *(struct hw_atl_rxd_wb_s *)rxd;
+			rxd = (volatile struct hw_atl_rxd_s *)&rxq->hw_ring[tail];
+			rxd_wb = *(volatile struct hw_atl_rxd_wb_s *)rxd;
 		};
 
 		/*
