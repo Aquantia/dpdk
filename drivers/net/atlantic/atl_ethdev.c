@@ -218,7 +218,7 @@ struct atl_xstats_tbl_s {
 	enum atl_xstats_type type;
 };
 
-static struct atl_xstats_tbl_s atl_xstats_tbl[] = {
+static struct atl_xstats_tbl_s atl_xstats_generic_tbl[] = {
 	ATL_XSTATS_FIELD(uprc),
 	ATL_XSTATS_FIELD(mprc),
 	ATL_XSTATS_FIELD(bprc),
@@ -233,6 +233,9 @@ static struct atl_xstats_tbl_s atl_xstats_tbl[] = {
 	ATL_XSTATS_FIELD(mbtc),
 	ATL_XSTATS_FIELD(bbrc),
 	ATL_XSTATS_FIELD(bbtc),
+};
+
+static struct atl_xstats_tbl_s atl_xstats_macsec_tbl[] = {
 	/* Ingress Common Counters */
 	ATL_MACSEC_XSTATS_FIELD(in_ctl_pkts),
 	ATL_MACSEC_XSTATS_FIELD(in_tagged_miss_pkts),
@@ -1006,21 +1009,18 @@ atl_dev_xstats_get_count(struct rte_eth_dev *dev)
 		(struct atl_adapter *)dev->data->dev_private;
 
 	struct aq_hw_s *hw = &adapter->hw;
-	unsigned int i, count = 0;
+	unsigned int count = 0;
 
-	for (i = 0; i < RTE_DIM(atl_xstats_tbl); i++) {
-		if (atl_xstats_tbl[i].type == XSTATS_TYPE_MACSEC &&
-			((hw->caps_lo & BIT(CAPS_LO_MACSEC)) == 0))
-			continue;
+	count = RTE_DIM(atl_xstats_generic_tbl);
 
-		count++;
-	}
+	if (hw->caps_lo & BIT(CAPS_LO_MACSEC))
+		count +=  RTE_DIM(atl_xstats_macsec_tbl);
 
 	return count;
 }
 
 static int
-atl_dev_xstats_get_names(struct rte_eth_dev *dev __rte_unused,
+atl_dev_xstats_get_names(struct rte_eth_dev *dev,
 			 struct rte_eth_xstat_name *xstats_names,
 			 unsigned int size)
 {
@@ -1028,13 +1028,28 @@ atl_dev_xstats_get_names(struct rte_eth_dev *dev __rte_unused,
 	unsigned int count = atl_dev_xstats_get_count(dev);
 
 	if (xstats_names) {
-		for (i = 0; i < size && i < count; i++) {
-			snprintf(xstats_names[i].name,
+		unsigned int n_names = 0;
+
+		for (i = 0; i < RTE_DIM(atl_xstats_generic_tbl); i++, n_names++) {
+			if (n_names == size)
+				goto done;
+
+			snprintf(xstats_names[n_names].name,
 				RTE_ETH_XSTATS_NAME_SIZE, "%s",
-				atl_xstats_tbl[i].name);
+				atl_xstats_generic_tbl[i].name);
+		}
+
+		for (i = 0; i < RTE_DIM(atl_xstats_macsec_tbl); i++, n_names++) {
+			if (n_names == size)
+				goto done;
+
+			snprintf(xstats_names[n_names].name,
+				RTE_ETH_XSTATS_NAME_SIZE, "%s",
+				atl_xstats_macsec_tbl[i].name);
 		}
 	}
 
+done:
 	return count;
 }
 
@@ -1049,12 +1064,14 @@ atl_dev_xstats_get(struct rte_eth_dev *dev, struct rte_eth_xstat *stats,
 	struct macsec_msg_fw_response resp = { 0 };
 	int err = -1;
 	unsigned int i;
+	unsigned int n_stats = 0;
 	unsigned int count = atl_dev_xstats_get_count(dev);
 
 	if (!stats)
 		return count;
 
-	if (hw->aq_fw_ops->send_macsec_req != NULL) {
+	if (n > RTE_DIM(atl_xstats_generic_tbl) &&
+		hw->aq_fw_ops->send_macsec_req != NULL) {
 		req.ingress_sa_index = 0xff;
 		req.egress_sc_index = 0xff;
 		req.egress_sa_index = 0xff;
@@ -1065,25 +1082,31 @@ atl_dev_xstats_get(struct rte_eth_dev *dev, struct rte_eth_xstat *stats,
 		err = hw->aq_fw_ops->send_macsec_req(hw, &msg, &resp);
 	}
 
-	for (i = 0; i < n && i < count; i++) {
-		stats[i].id = i;
+	for (i = 0; i < RTE_DIM(atl_xstats_generic_tbl); i++, n_stats++) {
+		if (n_stats == n)
+			goto done;
 
-		switch (atl_xstats_tbl[i].type) {
-		case XSTATS_TYPE_MSM:
-			stats[i].value = *(u64 *)((uint8_t *)&hw->curr_stats +
-					 atl_xstats_tbl[i].offset);
-			break;
-		case XSTATS_TYPE_MACSEC:
-			if (!err) {
-				stats[i].value =
-					*(u64 *)((uint8_t *)&resp.stats +
-					atl_xstats_tbl[i].offset);
-			}
-			break;
+		stats[n_stats].id = n_stats;
+
+
+		stats[n_stats].value = *(u64 *)((uint8_t *)&hw->curr_stats +
+				atl_xstats_generic_tbl[i].offset);
+	}
+
+	if (!err) {
+		for (i = 0; i < RTE_DIM(atl_xstats_macsec_tbl); i++, n_stats++) {
+			if (n_stats == n)
+				goto done;
+
+			stats[n_stats].id = n_stats;
+
+			stats[n_stats].value = *(u64 *)((uint8_t *)&resp.stats +
+					atl_xstats_macsec_tbl[i].offset);
 		}
 	}
 
-	return i;
+done:
+	return n_stats;
 }
 
 static int
