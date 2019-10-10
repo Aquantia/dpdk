@@ -13,6 +13,36 @@
 
 #include <rte_ethdev_driver.h>
 
+#define RTE_PMD_AQ_HW_LED_OFF		0x3U
+#define RTE_PMD_AQ_HW_LED_BLINK		0x2U
+#define RTE_PMD_AQ_HW_LED_ON		0x1U
+#define RTE_PMD_AQ_HW_LED_DEFAULT	0x0U
+
+/**
+ * @warning
+ * @b EXPERIMENTAL: this API may change, or be removed, without prior notice
+ *
+ * This is a custom API for adapter's LED controls.
+ *
+ * @param dev
+ *   Ethernet device to apply control to
+ * @param control
+ *   6 bit value (3 leds each 2bit):
+ *   - bits 0-1: LED0 control
+ *   - bits 2-3: LED1 control
+ *   - bits 4-5: LED2 control
+ *   Each two bit control value is:
+ *   - 0: Firmware manages this LED activity
+ *   - 1: Permanent ON
+ *   - 2: Blinking
+ *   - 3: Permanent OFF
+ *
+ * @return
+ *   - (0) if successful.
+ *   - (-ENOTSUP) if hardware doesn't support.
+ */
+int rte_pmd_atl_dev_led_control(int port, int control);
+
 /**
  * @warning
  * @b EXPERIMENTAL: this API may change, or be removed, without prior notice

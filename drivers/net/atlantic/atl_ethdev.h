@@ -116,4 +116,17 @@ int atl_macsec_select_rxsa(struct rte_eth_dev *dev, uint8_t idx,
 
 bool is_atlantic_supported(struct rte_eth_dev *dev);
 
+int
+atl_dev_led_control(struct rte_eth_dev *dev, int control);
+
+int
+atl_dev_read_eeprom(struct rte_eth_dev *dev,
+			struct rte_dev_eeprom_info *eeprom,
+			int dev_addr);
+
+int
+atl_dev_write_eeprom(struct rte_eth_dev *dev,
+			struct rte_dev_eeprom_info *eeprom,
+			int dev_addr);
+
 #endif /* _ATLANTIC_ETHDEV_H_ */

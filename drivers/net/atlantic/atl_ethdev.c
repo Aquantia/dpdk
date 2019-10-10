@@ -61,6 +61,10 @@ static void atl_vlan_strip_queue_set(struct rte_eth_dev *dev,
 static int atl_vlan_tpid_set(struct rte_eth_dev *dev,
 			     enum rte_vlan_type vlan_type, uint16_t tpid);
 
+/* LEDs */
+static int atl_dev_led_on(struct rte_eth_dev *dev);
+static int atl_dev_led_off(struct rte_eth_dev *dev);
+
 /* EEPROM */
 static int atl_dev_get_eeprom_length(struct rte_eth_dev *dev);
 static int atl_dev_get_eeprom(struct rte_eth_dev *dev,
@@ -319,6 +323,10 @@ static const struct eth_dev_ops atl_eth_dev_ops = {
 	.rx_queue_count       = atl_rx_queue_count,
 	.rx_descriptor_status = atl_dev_rx_descriptor_status,
 	.tx_descriptor_status = atl_dev_tx_descriptor_status,
+
+	/* LEDs */
+	.dev_led_on           = atl_dev_led_on,
+	.dev_led_off          = atl_dev_led_off,
 
 	/* EEPROM */
 	.get_eeprom_length    = atl_dev_get_eeprom_length,
@@ -1446,6 +1454,50 @@ atl_dev_interrupt_handler(void *param)
 	atl_dev_interrupt_action(dev, dev->intr_handle);
 }
 
+/**
+ * LED ON Enables software controllable LED blinking.
+ * LED status then is independent of link status or traffic
+ */
+static int
+atl_dev_led_on(struct rte_eth_dev *dev)
+{
+	struct aq_hw_s *hw = ATL_DEV_PRIVATE_TO_HW(dev->data->dev_private);
+
+	if (hw->aq_fw_ops->led_control == NULL)
+		return -ENOTSUP;
+
+	return hw->aq_fw_ops->led_control(hw,
+				AQ_HW_LED_BLINK |
+				(AQ_HW_LED_BLINK << 2) |
+				(AQ_HW_LED_BLINK << 4));
+}
+
+/**
+ * LED OFF disables software controllable LED blinking
+ * LED is controlled by default logic and depends on link status and
+ * traffic activity
+ */
+static int
+atl_dev_led_off(struct rte_eth_dev *dev)
+{
+	struct aq_hw_s *hw = ATL_DEV_PRIVATE_TO_HW(dev->data->dev_private);
+
+	if (hw->aq_fw_ops->led_control == NULL)
+		return -ENOTSUP;
+
+	return hw->aq_fw_ops->led_control(hw, AQ_HW_LED_DEFAULT);
+}
+
+int
+atl_dev_led_control(struct rte_eth_dev *dev, int control)
+{
+	struct aq_hw_s *hw = ATL_DEV_PRIVATE_TO_HW(dev->data->dev_private);
+
+	if (hw->aq_fw_ops->led_control == NULL)
+		return -ENOTSUP;
+
+	return hw->aq_fw_ops->led_control(hw, control);
+}
 
 static int
 atl_dev_get_eeprom_length(struct rte_eth_dev *dev __rte_unused)
